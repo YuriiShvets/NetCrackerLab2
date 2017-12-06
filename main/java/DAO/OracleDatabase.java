@@ -1,12 +1,13 @@
-package DAO.base;
+package DAO;
 
-import DAO.base.Types.Employee;
+import DAO.Types.All;
+import DAO.Types.Employee;
 
 import java.math.BigInteger;
 import java.sql.*;
 
-import java.time.LocalDateTime;
-import java.util.LinkedList;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
 /**
  * Created by User on 14.11.2017.
@@ -18,16 +19,112 @@ public class OracleDatabase extends Base {
     private String base = "NETCRACKERLAB2";
     private String password = "ijcnbqrehc";
 
-    @Override
-    public Object getObject(BigInteger id) {
+    private ResultSet getResultSetOfObject(BigInteger id) throws ClassNotFoundException, SQLException {
+        Class.forName("oracle.jdbc.driver.OracleDriver");
+        Connection connection = null;
+        connection = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", base, password);
 
-        return null;
+        Statement statement = connection.createStatement();
+        ResultSet rs = statement.executeQuery("SELECT Attributes.AttributesName, Parameters.NumbersData, Parameters.StringData, Parameters.DateData, Relations.ObjectsID RelationObjectID " +
+                                                " FROM Objects INNER JOIN Types ON Objects.TypesID = Types.TypesID " +
+                                                                "INNER JOIN Attributes ON Types.TypesID = Attributes.TypesID " +
+                                                                "INNER JOIN Parameters ON Parameters.AttributesID = Attributes.AttributesID AND Parameters.ObjectsID = Objects.ObjectsID " +
+                                                                "LEFT JOIN Relations ON Parameters.Relation = Relations.Relation " +
+                                                "WHERE Objects.ObjectsID = " + id);
+        return rs;
     }
 
     @Override
-    public void setObject(Object object, String type) throws ClassNotFoundException, SQLException {
-        if (type.equals("Employee")) {
-            setEmployee((Employee) object);
+    protected All getObjectFromBase(BigInteger id) throws ClassNotFoundException, SQLException {
+        Class.forName("oracle.jdbc.driver.OracleDriver");
+        Connection connection = null;
+        connection = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", base, password);
+
+        Statement statement = connection.createStatement();
+        ResultSet rs = statement.executeQuery("SELECT Types.TypesName " +
+                                                " FROM Types INNER JOIN Objects ON Types.TypesID = Objects.TypesID " +
+                                                "WHERE Objects.ObjectsID = " + id);
+        All object = null;
+        if(rs.next()) {
+            String typesName = rs.getString("TypesName");
+            switch(typesName) {
+                case "Employee": {
+                    object = getEmployee(id);
+                    break;
+                }
+            }
+        }
+
+        return object;
+    }
+
+    private All getEmployee(BigInteger id) throws ClassNotFoundException, SQLException {
+
+        ResultSet rs = getResultSetOfObject(id);
+        BigInteger empNo = null;
+        String eName = null;
+        String job = null;
+        BigInteger MGR = null;
+        LocalDate hireDate = null;
+        int sal = 0;
+        int comm = 0;
+        BigInteger deptNo = null;
+        while(rs.next()) {
+            switch(rs.getString("AttributesName")) {
+                case "empNo": {
+                    empNo = new BigInteger(rs.getString("NumbersData"));
+                    break;
+                }
+                case "eName": {
+                    eName = rs.getString("StringData");
+                    break;
+                }
+                case "job": {
+                    job = rs.getString("StringData");
+                    break;
+                }
+                case "MGR": {
+                    try {
+                        MGR = new BigInteger(rs.getString("RELATIONOBJECTID"));
+                    } catch(NullPointerException e) {
+                        System.out.println("MGR is NULL");
+                    }
+                    break;
+                }
+                case "hireDate": {
+                    String date = rs.getString("DateData").split(" ")[0];
+                    hireDate = LocalDate.of(Integer.parseInt(date.split("-")[0]), Integer.parseInt(date.split("-")[1]), Integer.parseInt(date.split("-")[2]));
+                    break;
+                }
+                case "sal": {
+                    sal = rs.getInt("NumbersData");
+                    break;
+                }
+                case "comm": {
+                    comm = rs.getInt("NumbersData");
+                    break;
+                }
+                case "deptNo": {
+                    try {
+                        deptNo = new BigInteger(rs.getString("RELATIONOBJECTID"));
+                    } catch (NullPointerException e) {
+                        System.out.println("deptNo is NULL");
+                    }
+                    break;
+                }
+            }
+        }
+        Employee employee = new Employee(empNo, eName, job, MGR, hireDate, sal, comm, deptNo);
+        return employee;
+    }
+
+    @Override
+    protected void setObjectToBase(All object, String type) throws ClassNotFoundException, SQLException {
+        switch(type) {
+            case "Employee": {
+                setEmployee((Employee) object);
+                break;
+            }
         }
     }
 

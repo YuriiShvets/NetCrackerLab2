@@ -1,6 +1,6 @@
-package DAO.base;
+package DAO;
 
-import DAO.base.Types.Employee;
+import DAO.Types.Employee;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class OracleDatabaseTest {
     @org.junit.Test
     public void setObject() throws Exception {
-        Employee employee = new Employee(new BigInteger("21"), "Yurii3", "Middle Java developer", null, LocalDate.now(), 10000, 5000, null);
+        Employee employee = new Employee(Base.getNewObjectId(), "Yurii3", "Middle Java developer", null, LocalDate.now(), 10000, 5000, null);
         Base base = new OracleDatabase();
         try {
             base.setObject(employee, employee.getClass().getSimpleName());
@@ -25,16 +25,24 @@ public class OracleDatabaseTest {
             e.printStackTrace();
         }
 
-        Employee employee2 = new Employee(new BigInteger("22"), "Yurii", "Junior Java developer", null, LocalDate.now(), 10000, 5000, null);
+
+        Employee employee2 = null;
+        Employee employee3 = null;
         try {
-            base.setObject(employee2, employee2.getClass().getSimpleName());
+            employee2 = (Employee)base.getObject(employee.getEmpNo());
+            employee3 = (Employee)base.getObjectFromBase(employee.getEmpNo());
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(employee.getEmpNo());
-        System.out.println(employee2.getEmpNo());
+
+        System.out.println(employee);
+        System.out.println(employee2);
+        System.out.println(employee3);
+
+        assertTrue(employee == employee2);
+        assertTrue(employee.equals(employee3));
     }
 
 }
