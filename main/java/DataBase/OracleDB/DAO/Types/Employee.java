@@ -1,4 +1,4 @@
-package DAO.Types;
+package DataBase.OracleDB.DAO.Types;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -18,7 +18,7 @@ public class Employee extends All {
     private BigInteger deptNo;
 
     public Employee(BigInteger empNo, String eName, String job, BigInteger MGR, LocalDate hireDate, int sal, int comm, BigInteger deptNo) {
-        super(empNo);
+        super(empNo, 5);
         this.empNo = empNo;
         this.eName = eName;
         this.job = job;

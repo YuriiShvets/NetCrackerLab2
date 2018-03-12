@@ -1,66 +1,21 @@
-package DAO;
+package DataBase.OracleDB.DAO;
 
-import DAO.Types.All;
-import DAO.Types.Employee;
+import DataBase.OracleDB.DAO.Types.All;
+import DataBase.OracleDB.DAO.Types.Employee;
 
 import java.math.BigInteger;
 import java.sql.*;
-
 import java.time.LocalDate;
-import java.util.ArrayList;
 
 /**
- * Created by User on 14.11.2017.
- *
+ * Created by User on 12.03.2018.
  * @author Shvets
  */
-public class OracleDatabase extends Base {
+public class EmployeeDAO extends DAO{
 
-    private String base = "NETCRACKERLAB2";
-    private String password = "ijcnbqrehc";
+    public All getObject(BigInteger id, Connection connection) throws ClassNotFoundException, SQLException {
 
-    private ResultSet getResultSetOfObject(BigInteger id) throws ClassNotFoundException, SQLException {
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-        Connection connection = null;
-        connection = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", base, password);
-
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT Attributes.AttributesName, Parameters.NumbersData, Parameters.StringData, Parameters.DateData, Relations.ObjectsID RelationObjectID " +
-                                                " FROM Objects INNER JOIN Types ON Objects.TypesID = Types.TypesID " +
-                                                                "INNER JOIN Attributes ON Types.TypesID = Attributes.TypesID " +
-                                                                "INNER JOIN Parameters ON Parameters.AttributesID = Attributes.AttributesID AND Parameters.ObjectsID = Objects.ObjectsID " +
-                                                                "LEFT JOIN Relations ON Parameters.Relation = Relations.Relation " +
-                                                "WHERE Objects.ObjectsID = " + id);
-        return rs;
-    }
-
-    @Override
-    protected All getObjectFromBase(BigInteger id) throws ClassNotFoundException, SQLException {
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-        Connection connection = null;
-        connection = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", base, password);
-
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT Types.TypesName " +
-                                                " FROM Types INNER JOIN Objects ON Types.TypesID = Objects.TypesID " +
-                                                "WHERE Objects.ObjectsID = " + id);
-        All object = null;
-        if(rs.next()) {
-            String typesName = rs.getString("TypesName");
-            switch(typesName) {
-                case "Employee": {
-                    object = getEmployee(id);
-                    break;
-                }
-            }
-        }
-
-        return object;
-    }
-
-    private All getEmployee(BigInteger id) throws ClassNotFoundException, SQLException {
-
-        ResultSet rs = getResultSetOfObject(id);
+        ResultSet rs = getResultSetOfObject(connection, id);
         BigInteger empNo = null;
         String eName = null;
         String job = null;
@@ -118,20 +73,9 @@ public class OracleDatabase extends Base {
         return employee;
     }
 
-    @Override
-    protected void setObjectToBase(All object, String type) throws ClassNotFoundException, SQLException {
-        switch(type) {
-            case "Employee": {
-                setEmployee((Employee) object);
-                break;
-            }
-        }
-    }
+    public void setObject(All object, Connection connection) throws ClassNotFoundException, SQLException {
 
-    private void setEmployee(Employee employee) throws ClassNotFoundException, SQLException {
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-        Connection connection = null;
-        connection = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", base, password);
+        Employee employee = (Employee)object;
 
         Statement statement = connection.createStatement();
         ResultSet rs = statement.executeQuery("select TypesID from Types WHERE TypesName = '" + employee.getClass().getSimpleName() + "'");
@@ -170,15 +114,15 @@ public class OracleDatabase extends Base {
                     "SET StringData = '" + employee.getEName() +
                     "' WHERE ObjectsId = " + employee.getEmpNo() +
                     " AND AttributesId = (SELECT Attributes.AttributesId " +
-                        "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
-                        "WHERE Attributes.AttributesName = 'eName' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
+                    "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
+                    "WHERE Attributes.AttributesName = 'eName' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
             //job
             statement.executeUpdate("UPDATE Parameters " +
                     "SET StringData = '" + employee.getJob() +
                     "' WHERE ObjectsId = " + employee.getEmpNo() +
                     " AND AttributesId = (SELECT Attributes.AttributesId " +
-                        "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
-                        "WHERE Attributes.AttributesName = 'job' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
+                    "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
+                    "WHERE Attributes.AttributesName = 'job' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
             //MGR
             if(employee.getMGR() == null) { //if not exist
                 statement.executeUpdate("DELETE Relations " +
@@ -190,16 +134,16 @@ public class OracleDatabase extends Base {
                         "SET Relation = NULL" +
                         " WHERE ObjectsId = " + employee.getEmpNo() +
                         " AND AttributesId = (SELECT Attributes.AttributesId " +
-                            "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
-                            "WHERE Attributes.AttributesName = 'MGR' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
+                        "FROM Attributes INNER JOIN Parameters ON Attributes.AttributesId = Parameters.AttributesID " +
+                        "WHERE Attributes.AttributesName = 'MGR' AND Parameters.ObjectsId = '" + employee.getEmpNo() + "')");
             }
             else {
                 rs = statement.executeQuery("SELECT Relation, RelationID " +
                         "FROM Parameters INNER JOIN Relations ON Parameters.Relation = Relations.Relation " +
                         "WHERE ObjectsId = " + employee.getEmpNo() +
                         " AND Parameters.AttributesId = (SELECT AttributesID " +
-                                                        "FROM Attributes " +
-                                                        "WHERE AttributesName = 'MGR')");
+                        "FROM Attributes " +
+                        "WHERE AttributesName = 'MGR')");
                 if(rs.next()) { //if Relation already exist
                     Statement statement2 = connection.createStatement();
                     statement2.executeUpdate("UPDATE Relations " +
@@ -349,7 +293,5 @@ public class OracleDatabase extends Base {
                 }
             }
         }
-
-        connection.close();
     }
 }
