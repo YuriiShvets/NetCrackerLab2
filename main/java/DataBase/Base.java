@@ -5,6 +5,8 @@ import DataBase.OracleDB.DAO.Types.All;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by User on 14.11.2017.
@@ -12,28 +14,29 @@ import java.util.ArrayList;
  */
 public abstract class Base {
 
-    private ArrayList<All> objects = new ArrayList<>();
+    private Map <BigInteger, All> objects = new HashMap<BigInteger, All>();
 
     public All getObject(BigInteger id) throws SQLException, ClassNotFoundException {
-        for(All object: objects) {
-            if(object.getId().equals(id)) {
-                return object;
-            }
+        if(objects.containsKey(id)) {
+            return getClone(objects.get(id));
         }
         All object = getObjectFromBase(id);
-        objects.add(object);
-        return object;
+        objects.put(object.getId(), object);
+        return getClone(object);
     }
 
-    public void setObject(All object, String type) throws SQLException, ClassNotFoundException {
-        for(All obj: objects) {
-            if(obj.getId().equals(object.getId())) {
-                objects.remove(obj);
-            }
+    public boolean setObject(All object) throws SQLException, ClassNotFoundException {
+        if(objects.containsKey(object.getId()) && object.getVersion() == objects.get(object.getId()).getVersion()) {
+            objects.remove(object.getId());
+            object.incrementVersion();
+            objects.put(object.getId(), object);
+            setObjectToBase(object);
+            return true;
         }
-        objects.add(object);
-        setObjectToBase(object, type);
+        return false;
     }
     protected abstract All getObjectFromBase(BigInteger id) throws ClassNotFoundException, SQLException;
-    protected abstract void setObjectToBase(All object, String type) throws ClassNotFoundException, SQLException;
+    protected abstract void setObjectToBase(All object) throws ClassNotFoundException, SQLException;
+
+    public abstract All getClone(All original) throws SQLException, ClassNotFoundException;
 }

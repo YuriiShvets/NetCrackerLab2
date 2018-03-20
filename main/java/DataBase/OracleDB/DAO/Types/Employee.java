@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * Created by User on 14.11.2017.
  * @author Shvets
  */
-public class Employee extends All {
+public class Employee extends All{
     private BigInteger empNo;   //ID
     private String eName;
     private String job;
@@ -18,7 +18,7 @@ public class Employee extends All {
     private BigInteger deptNo;
 
     public Employee(BigInteger empNo, String eName, String job, BigInteger MGR, LocalDate hireDate, int sal, int comm, BigInteger deptNo) {
-        super(empNo, 5);
+        super(empNo, 0, Employee.class.getSimpleName());
         this.empNo = empNo;
         this.eName = eName;
         this.job = job;
@@ -27,6 +27,18 @@ public class Employee extends All {
         this.sal = sal;
         this.comm = comm;
         this.deptNo = deptNo;
+    }
+
+    public Employee(Employee original) {
+        super(original);
+        this.empNo = original.getEmpNo();
+        this.eName = original.getEName();
+        this.job = original.getJob();
+        this.MGR = original.getMGR();
+        this.hireDate = original.getHireDate();
+        this.sal = original.getSal();
+        this.comm = original.getComm();
+        this.deptNo = original.getDeptNo();
     }
 
     public BigInteger getEmpNo() {

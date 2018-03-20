@@ -22,15 +22,15 @@ public class BaseTest {
 
     @Test
     public void getObject() throws Exception {
-        Employee employee = (Employee)base.getObject(new BigInteger("12"));
+        Employee employee = (Employee)base.getObject(new BigInteger("21"));
         System.out.println(employee.getEName());
     }
 
     @Test
     public void setObject() throws Exception {
-        Employee employee = new Employee(new BigInteger("12"), "Yurii4", "Middle Java developer", null, LocalDate.now(), 10000, 5000, null);
+        Employee employee = new Employee(new BigInteger("21"), "Yurii20", "Middle Java developer", null, LocalDate.now(), 10000, 5000, null);
         try {
-            base.setObject(employee, employee.getClass().getSimpleName());
+            base.setObject(employee);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {

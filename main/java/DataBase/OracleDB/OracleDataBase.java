@@ -35,34 +35,57 @@ public class OracleDataBase extends Base {
     @Override
     protected All getObjectFromBase(BigInteger id) throws ClassNotFoundException, SQLException {
         Connection connection = getConnection();
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT Types.TypesName " +
-                                                " FROM Types INNER JOIN Objects ON Types.TypesID = Objects.TypesID " +
-                                                "WHERE Objects.ObjectsID = " + id);
         All object = null;
-        if(rs.next()) {
-            String typesName = rs.getString("TypesName");
-            switch(typesName) {
-                case "Employee": {
-                    object = employeeDAO.getObject(id, connection);
-                    break;
-                }
-            }
-        }
+        String typesName = getTypesName(id);
 
-        connection.close();
-        return object;
-    }
-
-    @Override
-    protected void setObjectToBase(All object, String type) throws ClassNotFoundException, SQLException {
-        Connection connection = getConnection();
-        switch(type) {
+        switch (typesName) {
             case "Employee": {
-                employeeDAO.setObject((Employee) object,connection);
+                object = employeeDAO.getObject(id, connection);
                 break;
             }
         }
         connection.close();
+        return object;
+}
+
+    private String getTypesName(BigInteger id) throws SQLException, ClassNotFoundException {
+        Connection connection = getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet rs = statement.executeQuery("SELECT Types.TypesName " +
+                " FROM Types INNER JOIN Objects ON Types.TypesID = Objects.TypesID " +
+                "WHERE Objects.ObjectsID = " + id);
+        String typesName = null;
+        if (rs.next()) {
+            typesName = rs.getString("TypesName");
+        }
+        connection.close();
+        return typesName;
+    }
+
+    @Override
+    protected void setObjectToBase(All object) throws ClassNotFoundException, SQLException {
+        Connection connection = getConnection();
+        switch (object.getType()) {
+            case "Employee": {
+                employeeDAO.setObject((Employee) object, connection);
+                break;
+            }
+        }
+        connection.close();
+    }
+
+    @Override
+    public All getClone(All original) throws SQLException, ClassNotFoundException {
+        String typesName = getTypesName(original.getId());
+
+        All newObject = null;
+
+        switch (typesName) {
+            case "Employee": {
+                newObject = new Employee((Employee)original);
+                break;
+            }
+        }
+        return newObject;
     }
 }

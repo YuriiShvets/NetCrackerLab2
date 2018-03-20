@@ -15,6 +15,6 @@ public class Department extends All {
     private ArrayList<Employee> employees;
 
     Department(BigInteger id) {
-        super(id, 5);
+        super(id, 0, Department.class.getSimpleName());
     }
 }
