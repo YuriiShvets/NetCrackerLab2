@@ -37,5 +37,6 @@ public abstract class DAO {
     }
 
     public abstract All getObject(BigInteger id, Connection connection) throws ClassNotFoundException, SQLException;
-    public abstract void setObject(All object, Connection connection) throws ClassNotFoundException, SQLException;
+    public abstract boolean setObject(All object, Connection connection) throws ClassNotFoundException, SQLException;
+    protected abstract BigInteger getTypesId(Statement statement) throws ClassNotFoundException, SQLException;
 }

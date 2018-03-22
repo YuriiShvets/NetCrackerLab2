@@ -14,29 +14,41 @@ import java.util.Map;
  */
 public abstract class Base {
 
-    private Map <BigInteger, All> objects = new HashMap<BigInteger, All>();
+    private Map <BigInteger, All> objects = new HashMap<>();
 
     public All getObject(BigInteger id) throws SQLException, ClassNotFoundException {
         if(objects.containsKey(id)) {
+            System.out.println("Returning from bufer" + id);
             return getClone(objects.get(id));
         }
         All object = getObjectFromBase(id);
         objects.put(object.getId(), object);
+        System.out.println("returning from base" + id);
         return getClone(object);
     }
 
     public boolean setObject(All object) throws SQLException, ClassNotFoundException {
-        if(objects.containsKey(object.getId()) && object.getVersion() == objects.get(object.getId()).getVersion()) {
-            objects.remove(object.getId());
-            object.incrementVersion();
+        if(!objects.containsKey(object.getId())) {
             objects.put(object.getId(), object);
             setObjectToBase(object);
+            System.out.println("Put new Object to bufer" + object.getId());
             return true;
         }
+        else {
+            if (object.getVersion() == objects.get(object.getId()).getVersion()) {
+                objects.remove(object.getId());
+                object.incrementVersion();
+                objects.put(object.getId(), object);
+                setObjectToBase(object);
+                System.out.println("Update object in bufer" + object.getId());
+                return true;
+            }
+        }
+        System.out.println("Ooops, wrong version");
         return false;
     }
     protected abstract All getObjectFromBase(BigInteger id) throws ClassNotFoundException, SQLException;
     protected abstract void setObjectToBase(All object) throws ClassNotFoundException, SQLException;
 
-    public abstract All getClone(All original) throws SQLException, ClassNotFoundException;
+    protected abstract All getClone(All original) throws SQLException, ClassNotFoundException;
 }
